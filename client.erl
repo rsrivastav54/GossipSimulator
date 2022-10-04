@@ -1,5 +1,5 @@
 -module(client).
--export([get_value/2,set_value/3,get_size/1]).
+-export([get_value/2,set_value/2,get_size/1]).
 
 get_value(Server, Key) ->
     Server ! {self(), {get, Key}},
@@ -10,10 +10,10 @@ get_value(Server, Key) ->
            error
     end.
 
-set_value(Server, Key, Value) ->
-    Server ! {self(), {set, Key, Value}},
+set_value(Server, Key) ->
+    Server ! {self(), {set, Key, self()}},
     receive
-        {Server, {ok, Key, Value}}->
+        {Server, {ok}}->
             ok
     end.
 
