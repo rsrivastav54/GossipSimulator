@@ -11,10 +11,9 @@ loop(Map)->
             loop(Map);
         {Client, {set, Key, Value}} ->
             UpdatedMap = maps:put(Key, Value, Map),
-            Client ! {self(), {ok,Key,Value}},
+            Client ! {self(), {ok}},
             loop(UpdatedMap);
         {Client, {size}}->
             Client ! {self(),{ok, maps:size(Map)}},
             loop(Map)
     end.
-
