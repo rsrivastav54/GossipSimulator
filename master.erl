@@ -33,11 +33,15 @@ start()->
     unregister(master),
     exit(self(), ok).
 
-spawn_nodes(_, NodeCount, Map, _, _, 0) ->
+spawn_nodes(_, NodeCount, Map, _, Algorithm, 0) ->
     StartIndex = (rand:uniform(NodeCount) - 1), % 0 to Nodecount -1
     {ok, StartPid} = maps:find(StartIndex, Map),
     io:fwrite(" The first index ~p and Pid to message is ~p\n", [StartIndex, StartPid]),
-    StartPid ! {0, 1}, % may be make it asynchornous
+    if (Algorithm == 1) ->
+        StartPid ! {0, 1}; % may be make it asynchornous
+    true -> %Algorithm == 2
+        StartPid ! {"Maa Chudha"}
+    end,
     get_neighbor_pid(Map);
 
 spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount) ->
@@ -53,6 +57,7 @@ get_neighbor_pid(Map) ->
     receive
         {SenderPid, Index} ->
             {ok, NeighborPid} = maps:find(Index, Map),
+            % io:fwrite("Master: Neighbor of ~p is ~p\n", [SenderPid, NeighborPid]),
             %maybe update the list of nodes who have started sending
             SenderPid ! {NeighborPid},
             get_neighbor_pid(Map)

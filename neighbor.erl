@@ -1,5 +1,6 @@
 -module(neighbor).
 -export([start/3]).
+-export([get_neighbor_list/4]).
 
 get_row_len(S, N) ->
     if (S*S == N) ->
@@ -40,7 +41,7 @@ get_neighbor_list(Index, Topology, NodeCount, List) ->
             end,
             % Bug: for 10, 11 it gives random output
             NewList = lists:append([List, LeftNeighbor, RightNeighbor]),
-            io:fwrite(" Full Network Neighbor for ~p : ~p\n", [Index, NewList]),
+            io:fwrite(" Line Network Neighbor for ~p : ~p\n", [Index, NewList]),
             NewList;
         _ -> % 2 or 4
             RowLen = get_row_len(1, NodeCount),
@@ -81,10 +82,6 @@ get_neighbor_list(Index, Topology, NodeCount, List) ->
             true -> % Topology == 3
                 NewList
             end
-
-
-        
-        
     end.
 
 start(Topology, Index, NodeCount) -> % for testing
