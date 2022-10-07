@@ -42,7 +42,7 @@ spawn_nodes(_, NodeCount, Map, _, Algorithm, 0) ->
     true -> %Algorithm == 2
         StartPid ! {"Maa Chudha"}
     end,
-    get_neighbor_pid(Map);
+    get_neighbor_pid(Map, 0, NodeCount);
 
 spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount) ->
     if (Algorithm == 1) ->
@@ -53,12 +53,17 @@ spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount) ->
     UpdatedMap = maps:put(Index, Pid, Map),
     spawn_nodes(Index+1, NodeCount, UpdatedMap, Topology, Algorithm, FinalCount-1).
 
-get_neighbor_pid(Map) ->
+get_neighbor_pid(_, NodeCount, NodeCount) ->
+    io:fwrite("Shuting the master");
+
+get_neighbor_pid(Map, FinishCount, NodeCount) ->
     receive
         {SenderPid, Index} ->
             {ok, NeighborPid} = maps:find(Index, Map),
             % io:fwrite("Master: Neighbor of ~p is ~p\n", [SenderPid, NeighborPid]),
             %maybe update the list of nodes who have started sending
             SenderPid ! {NeighborPid},
-            get_neighbor_pid(Map)
+            get_neighbor_pid(Map, FinishCount, NodeCount);
+        {SenderPid} ->
+            get_neighbor_pid(Map, FinishCount+1, NodeCount)
     end.

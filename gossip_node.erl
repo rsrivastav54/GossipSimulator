@@ -18,16 +18,16 @@ loop_neighbor(NeighborList, ListIndex, ParentPid, Rumor, RumorCount) ->
                 ok
             end
     end,
-    if (RumorCount == 10) ->
-        io:fwrite("~p has got 10 messages, exiting with message ~p\n", [ParentPid, Rumor]),
-        exit(ParentPid, ok);
-    true ->
-        loop_neighbor(NeighborList, ListIndex-1, ParentPid, Rumor, RumorCount)
-    end.
+    loop_neighbor(NeighborList, ListIndex-1, ParentPid, Rumor, RumorCount).
 
 
 send_neighbor(NeighborList, ParentPid, Rumor, RumorCount) ->
     loop_neighbor(NeighborList, length(NeighborList), ParentPid, Rumor, RumorCount).
+
+cur_state(10, _, _, _) ->
+    io:fwrite("~p has got 10 messages, exiting with message ~p\n", [self(), "Fir se maa chudha"]),
+    master ! {self()},
+    ok;
 
 cur_state(RumorCount, Index, NodeCount, Topology) ->
     receive
