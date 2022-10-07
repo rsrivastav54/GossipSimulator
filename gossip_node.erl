@@ -22,29 +22,31 @@ loop_neighbor(NeighborList, ListIndex, ParentPid, Rumor, RumorCount) ->
 
 
 send_neighbor(NeighborList, ParentPid, Rumor, RumorCount) ->
-    loop_neighbor(NeighborList, length(NeighborList), ParentPid, Rumor, RumorCount).
+    loop_neighbor(NeighborList, length(NeighborList), ParentPid, Rumor, RumorCount),
+    send_neighbor(NeighborList, ParentPid, Rumor, RumorCount).
 
-cur_state(10, _, _, _) ->
+cur_state(10, _, _, _, _) ->
     io:fwrite("~p has got 10 messages, exiting with message ~p\n", [self(), "Fir se maa chudha"]),
     master ! {self()},
     ok;
 
-cur_state(RumorCount, Index, NodeCount, Topology) ->
+cur_state(RumorCount, Index, NodeCount, Topology, SenderPid) ->
     receive
         {Rumor} ->
             io:fwrite("~p Recived rumour rumor count ~p\n", [self(), RumorCount]),
             NeighborList = get_neighbor_list(Index, Topology, NodeCount, []),
-            spawn(gossip_node, send_neighbor, [NeighborList, self(), Rumor, RumorCount]), % makeing it async
-            % Get all neighbor
-            % Select one neighbor
-            % Get Pid of the nieghbor
-            % Send message to the neighbor
-            % check for exit condition
-            cur_state(RumorCount+1, Index, NodeCount, Topology)
-            % change 
+             % makeing it async
+
+            if (RumorCount =/= 1) ->
+                exit(SenderPid, ok);
+            true ->
+                ok
+            end,
+            NewSenderPid = spawn(gossip_node, send_neighbor, [NeighborList, self(), Rumor, RumorCount]),
+            cur_state(RumorCount+1, Index, NodeCount, Topology, NewSenderPid)
 
     end.
 
 start(Index, NodeCount, Topology) ->
     io:fwrite(" Started Gossip Node with pid ~p\n", [self()]),
-    cur_state(0, Index, NodeCount, Topology).
+    cur_state(1, Index, NodeCount, Topology, self()).

@@ -65,6 +65,6 @@ get_neighbor_pid(Map, FinishCount, NodeCount) ->
             SenderPid ! {NeighborPid},
             get_neighbor_pid(Map, FinishCount, NodeCount);
         {SenderPid} ->
-            get_neighbor_pid(Map, FinishCount+1, NodeCount),
-            SenderPid ! {ok}
+            io:fwrite("~p converged\n", [SenderPid]),
+            get_neighbor_pid(Map, FinishCount+1, NodeCount)
     end.

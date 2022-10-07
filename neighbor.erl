@@ -9,15 +9,15 @@ get_row_len(S, N) ->
         get_row_len(S+1, N)
     end.
 
-add_random(NodeCount, List) ->
+add_random(Index, NodeCount, List) ->
     RandomIndex = (rand:uniform(NodeCount) - 1),
     Check_num = fun(E) -> E == RandomIndex end,
     Status = lists:any(Check_num, List),
-    if (Status== false) -> % check if the new index is present in the list
+    if ((Status== false) and (RandomIndex =/= Index)) -> % check if the new index is present in the list
         RandomList = lists:append([List, [RandomIndex]]),
         RandomList;
     true ->
-        add_random(NodeCount, List)
+        add_random(Index, NodeCount, List)
     end.
 
 get_neighbor_list(Index, Topology, NodeCount, List) ->
@@ -25,9 +25,13 @@ get_neighbor_list(Index, Topology, NodeCount, List) ->
     case Topology of
         1 -> % Full Network
             NeighborIndex = (rand:uniform(NodeCount) - 1),
-            NewList = lists:append([List, [NeighborIndex]]),
-            io:fwrite(" Full Network Neighbor for ~p : ~w\n", [Index, NewList]),
-            NewList;
+            if (NeighborIndex == Index) ->
+                get_neighbor_list(Index, Topology, NodeCount, List);
+            true ->
+                NewList = lists:append([List, [NeighborIndex]]),
+                io:fwrite(" Full Network Neighbor for ~p : ~w\n", [Index, NewList]),
+                NewList
+            end;
         3 -> % Line
             if (Index == 0) ->
                 LeftNeighbor = [];
@@ -77,7 +81,7 @@ get_neighbor_list(Index, Topology, NodeCount, List) ->
             io:fwrite(" 2d Neighbor for ~p : ~w\n", [Index, NewList]),
             
             if (Topology == 4) ->
-                RandomList = add_random(NodeCount, NewList),
+                RandomList = add_random(Index, NodeCount, NewList),
                 io:fwrite(" 2d Imperfect Neighbor for ~p : ~w\n", [Index, RandomList]),
                 RandomList;
             true -> % Topology == 3
