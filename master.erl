@@ -54,7 +54,7 @@ spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount) ->
     spawn_nodes(Index+1, NodeCount, UpdatedMap, Topology, Algorithm, FinalCount-1).
 
 get_neighbor_pid(_, NodeCount, NodeCount) ->
-    io:fwrite("Shuting the master");
+    io:fwrite("Shuting the master ~n");
 
 get_neighbor_pid(Map, FinishCount, NodeCount) ->
     receive
@@ -65,5 +65,6 @@ get_neighbor_pid(Map, FinishCount, NodeCount) ->
             SenderPid ! {NeighborPid},
             get_neighbor_pid(Map, FinishCount, NodeCount);
         {SenderPid} ->
-            get_neighbor_pid(Map, FinishCount+1, NodeCount)
+            get_neighbor_pid(Map, FinishCount+1, NodeCount),
+            SenderPid ! {ok}
     end.
