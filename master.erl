@@ -1,5 +1,5 @@
 -module(master).
--export([start/0]).
+-export([start/0, get_neighbor_pid/4]).
 -import(push_sum_node, [start/3]).
 
 get_perfect_square(S, N) ->
@@ -44,7 +44,11 @@ spawn_nodes(_, NodeCount, Map, _, Algorithm, 0, _) ->
     true -> %Algorithm == 2
         StartPid ! {"Maa Chudha"}
     end,
-    get_neighbor_pid(Map, MapCount, 2, NodeCount);
+    {Time, _} = timer:tc(master, get_neighbor_pid, [Map, MapCount, 1, NodeCount]),
+    io:fwrite("Total time : ~p\n",[Time]),
+    unregister(master),
+    exit(self(), ok);
+    %get_neighbor_pid(Map, MapCount, 2, NodeCount);
 
 spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount, Master) ->
     if (Algorithm == 1) ->
@@ -57,9 +61,7 @@ spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount, Master) ->
 
 get_neighbor_pid(_, CountMap, NodeCount, NodeCount) ->
     io:fwrite("Final Communicated Map ::: ~p\n Finish Count : ~p Node Count : ~p\n",[CountMap, NodeCount, NodeCount]),
-    io:fwrite("Convergence Achieved, Shuting the master ~n"),
-    unregister(master),
-    exit(self(), ok);
+    io:fwrite("Convergence Achieved, Shuting the master ~n");
     %ok;
 
 get_neighbor_pid(Map, CountMap, FinishCount, NodeCount) ->
