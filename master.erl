@@ -36,7 +36,7 @@ start()->
 spawn_nodes(_, NodeCount, Map, _, Algorithm, 0) ->
     StartIndex = (rand:uniform(NodeCount) - 1), % 0 to Nodecount -1
     {ok, StartPid} = maps:find(StartIndex, Map),
-    io:fwrite(" The first index ~p and Pid to message is ~p\n", [StartIndex, StartPid]),
+    io:fwrite(" The first message to index ~p and Pid ~p\n", [StartIndex, StartPid]),
     if (Algorithm == 1) ->
         StartPid ! {0, 1}; % may be make it asynchornous
     true -> %Algorithm == 2
@@ -64,7 +64,7 @@ get_neighbor_pid(Map, FinishCount, NodeCount) ->
             %maybe update the list of nodes who have started sending
             SenderPid ! {NeighborPid},
             get_neighbor_pid(Map, FinishCount, NodeCount);
-        {SenderPid} ->
-            io:fwrite("~p converged\n", [SenderPid]),
+        {SenderIndex} ->
+            io:fwrite("~p converged, finishcount: ~p\n", [SenderIndex, FinishCount+1]),
             get_neighbor_pid(Map, FinishCount+1, NodeCount)
     end.

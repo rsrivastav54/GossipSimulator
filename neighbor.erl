@@ -29,7 +29,7 @@ get_neighbor_list(Index, Topology, NodeCount, List) ->
                 get_neighbor_list(Index, Topology, NodeCount, List);
             true ->
                 NewList = lists:append([List, [NeighborIndex]]),
-                io:fwrite(" Full Network Neighbor for ~p : ~w\n", [Index, NewList]),
+                % io:fwrite(" Full Network Neighbor for ~p : ~w\n", [Index, NewList]),
                 NewList
             end;
         3 -> % Line
@@ -46,7 +46,7 @@ get_neighbor_list(Index, Topology, NodeCount, List) ->
             end,
             % Bug: for 10, 11 it gives random output
             NewList = lists:append([List, LeftNeighbor, RightNeighbor]),
-            io:fwrite(" Line Network Neighbor for ~p : ~w\n", [Index, NewList]),
+            % io:fwrite(" Line Network Neighbor for ~p : ~w\n", [Index, NewList]),
             NewList;
         _ -> % 2 or 4
             RowLen = get_row_len(1, NodeCount),
@@ -78,11 +78,11 @@ get_neighbor_list(Index, Topology, NodeCount, List) ->
 
             % Bug: Somhow giving wrong output for Index = 12 and NodeCount = 16. Correct for all other
             NewList = lists:append([List, LeftNeighbor, RightNeighbor, TopNeighbor, BottomNeighbor]),
-            io:fwrite(" 2d Neighbor for ~p : ~w\n", [Index, NewList]),
+            % io:fwrite(" 2d Neighbor for ~p : ~w\n", [Index, NewList]),
             
             if (Topology == 4) ->
                 RandomList = add_random(Index, NodeCount, NewList),
-                io:fwrite(" 2d Imperfect Neighbor for ~p : ~w\n", [Index, RandomList]),
+                % io:fwrite(" 2d Imperfect Neighbor for ~p : ~w\n", [Index, RandomList]),
                 RandomList;
             true -> % Topology == 3
                 NewList
