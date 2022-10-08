@@ -1,13 +1,20 @@
 -module(gossip_node).
--export([start/3]).
--export([send_neighbor/4]).
+-export([start/4]).
+-export([send_neighbor/5]).
 -import(neighbor, [get_neighbor_list/4]).
 
-loop_neighbor(_, 0, _, _) ->
+loop_neighbor(_, 0, _, _, _) ->
     ok;
-loop_neighbor(NeighborList, ListIndex, ParentIndex, Rumor) ->
+loop_neighbor(NeighborList, ListIndex, ParentIndex, Rumor, Master) ->
     Neighbor = lists:nth(ListIndex, NeighborList),
-    master ! {self(), Neighbor},
+    %master ! {self(), Neighbor},
+    %io:fwrite("~p\n",[Neighbor]),
+    MasterAlive = is_process_alive(Master),
+    if(MasterAlive) ->
+        master ! {self(), Neighbor};
+    true ->
+        ok
+    end,
     receive
         {NeighborPid} ->
             NeighborAlive = is_process_alive(NeighborPid),
@@ -22,31 +29,31 @@ loop_neighbor(NeighborList, ListIndex, ParentIndex, Rumor) ->
     % loop_neighbor(NeighborList, ListIndex-1, ParentIndex, Rumor).
 
 
-send_neighbor(ParentIndex, Topology, NodeCount, Rumor) ->
+send_neighbor(ParentIndex, Topology, NodeCount, Rumor, Master) ->
     NeighborList = get_neighbor_list(ParentIndex, Topology, NodeCount, []),
     RandomNeighborIndex = rand:uniform(length(NeighborList)),
-    loop_neighbor(NeighborList, RandomNeighborIndex, ParentIndex, Rumor),
-    send_neighbor(ParentIndex, Topology, NodeCount, Rumor).
+    loop_neighbor(NeighborList, RandomNeighborIndex, ParentIndex, Rumor, Master),
+    send_neighbor(ParentIndex, Topology, NodeCount, Rumor, Master).
 
-cur_state(10, Index, _, _, SenderPid) ->
+cur_state(10, _, _, _, SenderPid, _) ->
     % io:fwrite("~p has got 10 messages, exiting with message ~p\n", [self(), "Fir se maa chudha"]),
-    exit(SenderPid, ok),
-    master ! {Index},
-    ok;
+    exit(SenderPid, ok);
+    % master ! {Index},
+    % ok;
 
-cur_state(RumorCount, Index, NodeCount, Topology, SenderPid) ->
+cur_state(RumorCount, Index, NodeCount, Topology, SenderPid, Master) ->
     receive
         {Rumor} ->
             if (RumorCount == 1) ->
-                NewSenderPid = spawn(gossip_node, send_neighbor, [Index, Topology, NodeCount, Rumor]);  % makeing it async
+                NewSenderPid = spawn(gossip_node, send_neighbor, [Index, Topology, NodeCount, Rumor, Master]);  % makeing it async
                 % exit(SenderPid, ok);
             true ->
                 NewSenderPid = SenderPid,
                 ok
             end,
-            cur_state(RumorCount+1, Index, NodeCount, Topology, NewSenderPid)
+            cur_state(RumorCount+1, Index, NodeCount, Topology, NewSenderPid, Master)
     end.
 
-start(Index, NodeCount, Topology) ->
+start(Index, NodeCount, Topology, Master) ->
     io:fwrite(" Started Gossip Node with index: ~p\n", [Index]),
-    cur_state(1, Index, NodeCount, Topology, self()).
+    cur_state(1, Index, NodeCount, Topology, self(), Master).
