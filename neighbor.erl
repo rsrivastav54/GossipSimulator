@@ -53,15 +53,39 @@ get_neighbor_list(Index, Topology, NodeCount, List) ->
             X = (Index div RowLen),
             Y = Index rem RowLen,
             if (Y==0) ->
-                LeftNeighbor = [];
+                LeftNeighbor = [],
+                TopLeftNeighbor = [],
+                BottomLeftNeighbor = [];
             true ->
-                LeftNeighbor = [Index-1]
+                LeftNeighbor = [Index-1],
+                if (Index-RowLen-1>=0) ->
+                    TopLeftNeighbor = [Index-RowLen-1];
+                true ->
+                    TopLeftNeighbor = []
+                end,
+                if (Index+RowLen-1<NodeCount) ->
+                    BottomLeftNeighbor = [Index+RowLen-1];
+                true ->
+                    BottomLeftNeighbor = []
+                end
             end,
 
             if (Y==(RowLen-1)) ->
-                RightNeighbor = [];
+                RightNeighbor = [],
+                TopRightNeighbor = [],
+                BottomRightNeighbor = [];
             true ->
-                RightNeighbor = [Index+1]
+                RightNeighbor = [Index+1],
+                if (Index-RowLen+1>=0) ->
+                    TopRightNeighbor = [Index-RowLen+1];
+                true ->
+                    TopRightNeighbor = []
+                end,
+                if (Index+RowLen+1<NodeCount) ->
+                    BottomRightNeighbor = [Index+RowLen+1];
+                true ->
+                    BottomRightNeighbor = []
+                end
             end,
             
             if (X==0) ->
@@ -77,7 +101,7 @@ get_neighbor_list(Index, Topology, NodeCount, List) ->
             end,
 
             % Bug: Somhow giving wrong output for Index = 12 and NodeCount = 16. Correct for all other
-            NewList = lists:append([List, LeftNeighbor, RightNeighbor, TopNeighbor, BottomNeighbor]),
+            NewList = lists:append([List, LeftNeighbor, RightNeighbor, TopNeighbor, BottomNeighbor, TopLeftNeighbor, BottomLeftNeighbor, TopRightNeighbor, BottomRightNeighbor]),
             % io:fwrite(" 2d Neighbor for ~p : ~w\n", [Index, NewList]),
             
             if (Topology == 4) ->
