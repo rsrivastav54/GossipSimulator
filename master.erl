@@ -1,5 +1,5 @@
 -module(master).
--export([start/0, get_neighbor_pid/4]).
+-export([start/0, get_neighbor_pid/5]).
 -import(push_sum_node, [start/3]).
 
 get_perfect_square(S, N) ->
@@ -29,11 +29,17 @@ start()->
     % when all the nodes are spawned, start one of the nodes
     % then wait for nodes to ask for the Pids for one of the neighbors
     % spawn(server, loop, [maps:new()]).
-    spawn_nodes(0, NewNodeCount, maps:new(), Topology, Algorithm, NewNodeCount, Master).
+    FaultyCount = 4,
+    FaultyList = faulty_list(NewNodeCount,FaultyCount),
+    io:fwrite("Faulty List: ~p\n",[FaultyList]),
+    spawn_nodes(0, NewNodeCount, maps:new(), Topology, Algorithm, NewNodeCount, Master, FaultyList).
     %unregister(master),
     %exit(self(), ok).
 
-spawn_nodes(_, NodeCount, Map, _, Algorithm, 0, _) ->
+faulty_list(NodeCount, FaultyCount) ->
+    [rand:uniform(NodeCount) - 1 || _ <- lists:seq(1, FaultyCount)].
+
+spawn_nodes(_, NodeCount, Map, _, Algorithm, 0, _, FaultyList) ->
     StartIndex = (rand:uniform(NodeCount) - 1), % 0 to Nodecount -1
     {ok, StartPid} = maps:find(StartIndex, Map),
     MapCount = maps:put(StartIndex, StartPid, maps:new()),
@@ -44,39 +50,41 @@ spawn_nodes(_, NodeCount, Map, _, Algorithm, 0, _) ->
     true -> %Algorithm == 2
         StartPid ! {"Maa Chudha"}
     end,
-    {Time, _} = timer:tc(master, get_neighbor_pid, [Map, MapCount, 1, NodeCount]),
+    {Time, _} = timer:tc(master, get_neighbor_pid, [Map, MapCount, 1, NodeCount, FaultyList]),
     io:fwrite("Total time : ~p\n",[Time]),
     unregister(master),
     exit(self(), ok);
     %get_neighbor_pid(Map, MapCount, 2, NodeCount);
 
-spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount, Master) ->
-    if (Algorithm == 1) ->
-        Pid = spawn(push_sum_node, start, [Index, NodeCount, Topology, Master]);
+spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount, Master, FaultyList) ->
+    Check_num = fun(E) -> E == Index end,
+    B = lists:any(Check_num, FaultyList),    
+    if ((Algorithm == 2) and (B == false)) ->
+        Pid = spawn(gossip_node, start, [Index, NodeCount, Topology, Master]),
+        UpdatedMap = maps:put(Index, Pid, Map);
     true -> % Algorithm == 2
-        Pid = spawn(gossip_node, start, [Index, NodeCount, Topology, Master])
+        UpdatedMap = maps:put(Index, null, Map)
     end,
-    UpdatedMap = maps:put(Index, Pid, Map),
-    spawn_nodes(Index+1, NodeCount, UpdatedMap, Topology, Algorithm, FinalCount-1, Master).
+    spawn_nodes(Index+1, NodeCount, UpdatedMap, Topology, Algorithm, FinalCount-1, Master, FaultyList).
 
-get_neighbor_pid(_, CountMap, NodeCount, NodeCount) ->
+get_neighbor_pid(_, CountMap, NodeCount, NodeCount, FaultyList) ->
     io:fwrite("Final Communicated Map ::: ~p\n Finish Count : ~p Node Count : ~p\n",[CountMap, NodeCount, NodeCount]),
     io:fwrite("Convergence Achieved, Shuting the master ~n");
     %ok;
 
-get_neighbor_pid(Map, CountMap, FinishCount, NodeCount) ->
+get_neighbor_pid(Map, CountMap, FinishCount, NodeCount, FaultyList) ->
     receive
         {SenderPid, Index} ->
             {ok, NeighborPid} = maps:find(Index, Map),
             A = maps:find(Index, CountMap),
             SenderPid ! {NeighborPid},
             if (A =:= {ok,NeighborPid})->
-                get_neighbor_pid(Map, CountMap, FinishCount, NodeCount);
+                get_neighbor_pid(Map, CountMap, FinishCount, NodeCount, FaultyList);
             true ->
                 UpdatedMap = maps:put(Index, NeighborPid, CountMap),
                 %SenderPid ! {NeighborPid},
                 io:fwrite("Communicated Map ::: ~p\n Finish Count : ~p Node Count : ~p\n",[UpdatedMap, FinishCount, NodeCount]),
-                get_neighbor_pid(Map, UpdatedMap, FinishCount+1, NodeCount)
+                get_neighbor_pid(Map, UpdatedMap, FinishCount+1, NodeCount, FaultyList)
             end    
             % io:fwrite("Master: Neighbor of ~p is ~p\n", [SenderPid, NeighborPid]),
             %maybe update the list of nodes who have started sending
