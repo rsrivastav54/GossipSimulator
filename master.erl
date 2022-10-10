@@ -1,5 +1,5 @@
 -module(master).
--export([start/0, get_neighbor_pid/4]).
+-export([start/0, get_neighbor_pid_gossip/4, get_neighbor_pid_pushsum/4]).
 -import(push_sum_node, [start/3]).
 
 get_perfect_square(S, N) ->
@@ -24,11 +24,6 @@ start()->
         NewNodeCount = NodeCount
     end,
 
-    % spawn nodes
-    % store the pids in the maps
-    % when all the nodes are spawned, start one of the nodes
-    % then wait for nodes to ask for the Pids for one of the neighbors
-    % spawn(server, loop, [maps:new()]).
     spawn_nodes(0, NewNodeCount, maps:new(), Topology, Algorithm, NewNodeCount, Master).
     %unregister(master),
     %exit(self(), ok).
@@ -42,13 +37,16 @@ spawn_nodes(_, NodeCount, Map, _, Algorithm, 0, _) ->
     if (Algorithm == 1) ->
         StartPid ! {0, 1}; % may be make it asynchornous
     true -> %Algorithm == 2
-        StartPid ! {"Maa Chudha"}
+        StartPid ! {"Oh Yeah!"}
     end,
-    {Time, _} = timer:tc(master, get_neighbor_pid, [Map, MapCount, 1, NodeCount]),
+    if (Algorithm == 1) ->
+        {Time, _} = timer:tc(master, get_neighbor_pid_pushsum, [Map, MapCount, 1, NodeCount]);
+    true ->
+        {Time, _} = timer:tc(master, get_neighbor_pid_gossip, [Map, MapCount, 1, NodeCount])
+    end,
     io:fwrite("Total time : ~p\n",[Time]),
     unregister(master),
     exit(self(), ok);
-    %get_neighbor_pid(Map, MapCount, 2, NodeCount);
 
 spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount, Master) ->
     if (Algorithm == 1) ->
@@ -59,30 +57,40 @@ spawn_nodes(Index, NodeCount, Map, Topology, Algorithm, FinalCount, Master) ->
     UpdatedMap = maps:put(Index, Pid, Map),
     spawn_nodes(Index+1, NodeCount, UpdatedMap, Topology, Algorithm, FinalCount-1, Master).
 
-get_neighbor_pid(_, CountMap, NodeCount, NodeCount) ->
+get_neighbor_pid_gossip(_, CountMap, NodeCount, NodeCount) ->
     io:fwrite("Final Communicated Map ::: ~p\n Finish Count : ~p Node Count : ~p\n",[CountMap, NodeCount, NodeCount]),
     io:fwrite("Convergence Achieved, Shuting the master ~n");
     %ok;
 
-get_neighbor_pid(Map, CountMap, FinishCount, NodeCount) ->
+get_neighbor_pid_gossip(Map, CountMap, FinishCount, NodeCount) ->
     receive
         {SenderPid, Index} ->
             {ok, NeighborPid} = maps:find(Index, Map),
             A = maps:find(Index, CountMap),
             SenderPid ! {NeighborPid},
             if (A =:= {ok,NeighborPid})->
-                get_neighbor_pid(Map, CountMap, FinishCount, NodeCount);
+                get_neighbor_pid_gossip(Map, CountMap, FinishCount, NodeCount);
             true ->
                 UpdatedMap = maps:put(Index, NeighborPid, CountMap),
                 %SenderPid ! {NeighborPid},
                 io:fwrite("Communicated Map ::: ~p\n Finish Count : ~p Node Count : ~p\n",[UpdatedMap, FinishCount, NodeCount]),
-                get_neighbor_pid(Map, UpdatedMap, FinishCount+1, NodeCount)
-            end    
-            % io:fwrite("Master: Neighbor of ~p is ~p\n", [SenderPid, NeighborPid]),
-            %maybe update the list of nodes who have started sending
-            %SenderPid ! {NeighborPid},
-            %get_neighbor_pid(Map, CountMap, FinishCount, NodeCount);
-        % {SenderIndex} ->
-        %     io:fwrite("~p converged, finishcount: ~p\n", [SenderIndex, FinishCount+1]),
-        %     get_neighbor_pid(Map, CountMap, FinishCount+1, NodeCount)
+                get_neighbor_pid_gossip(Map, UpdatedMap, FinishCount+1, NodeCount)
+            end
+    end.
+
+get_neighbor_pid_pushsum(_, _, NodeCount, NodeCount) ->
+    io:fwrite("Finish Count : ~p Node Count : ~p\n",[NodeCount, NodeCount]),
+    io:fwrite("Convergence Achieved, Shuting the master ~n");
+
+get_neighbor_pid_pushsum(Map, MapCount, FinishCount, NodeCount) ->
+    MapCount,
+    receive
+        {SenderPid, Index} ->
+            {ok, NeighborPid} = maps:find(Index, Map),
+            SenderPid ! {NeighborPid},
+            get_neighbor_pid_pushsum(Map, MapCount, FinishCount, NodeCount);
+        {SenderIndex} ->
+            io:fwrite("~p Converge, Finish Count ~p\n", [SenderIndex, FinishCount]),
+            get_neighbor_pid_pushsum(Map, MapCount, FinishCount+1, NodeCount),
+            SenderIndex
     end.
