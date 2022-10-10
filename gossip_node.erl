@@ -1,5 +1,5 @@
 -module(gossip_node).
--export([start/4]).
+-export([start/5]).
 -export([send_neighbor/5]).
 -import(neighbor, [get_neighbor_list/4]).
 
@@ -54,6 +54,19 @@ cur_state(RumorCount, Index, NodeCount, Topology, SenderPid, Master) ->
             cur_state(RumorCount+1, Index, NodeCount, Topology, NewSenderPid, Master)
     end.
 
-start(Index, NodeCount, Topology, Master) ->
+start(Index, NodeCount, Topology, Master, FaultyList) ->
     io:fwrite(" Started Gossip Node with index: ~p\n", [Index]),
-    cur_state(1, Index, NodeCount, Topology, self(), Master).
+    Check_num = fun(E) -> E == Index end,
+    B = lists:any(Check_num, FaultyList),    
+    if(B == true)->
+        wait_state();
+    true->
+        io:fwrite(" Started Gossip Node with index: ~p\n", [Index]),
+        cur_state(1, Index, NodeCount, Topology, self(), Master)
+    end.
+
+wait_state() ->
+    receive
+        {A,B,C}->
+            io:fwrite("Waiting for ~p ~p ~p",[A,B,C])
+    end.
