@@ -12,7 +12,7 @@
 - Compile all the .erl files in the zip folder (master, neighbor, topology, push_sum_node, gossip_node). 
 - Run the project by running the command “master:start().” in the erl shell. 
 - Enter the number of nodes, for example, 100.
-- Choose the type of topology you want to test the code with(1. for Full, 2. for 2D, 3. for Line and 4. for 3D), and select the algorithm (1. for Gossip, 2. for Push-Sum).
+- Choose the type of topology you want to test the code with (1. for Full, 2. for 2D, 3. for Line and 4. for 3D), and then select the algorithm (1. for Gossip, 2. for Push-Sum).
 
 ## Implementation Details
 
@@ -37,12 +37,16 @@
 
 ## Observations(Gossip)
 ### Running gossip for Full Topology
+<img width="630" alt="Screen Shot 2022-10-10 at 5 25 56 PM" src="https://user-images.githubusercontent.com/59756917/194954875-be447d98-c08a-4764-9995-62bcb5f1ff6c.png">
 
 ### Running gossip for 2D
+<img width="628" alt="Screen Shot 2022-10-10 at 5 27 37 PM" src="https://user-images.githubusercontent.com/59756917/194955007-0cb63f16-e455-45b0-8657-28f25dce60d4.png">
 
 ### Running gossip for Line
+<img width="628" alt="Screen Shot 2022-10-10 at 5 28 20 PM" src="https://user-images.githubusercontent.com/59756917/194955069-263a2018-bc9a-48ba-8b8d-e14b3b3a1838.png">
 
 ### Running gossip for 3D
+<img width="628" alt="Screen Shot 2022-10-10 at 5 28 53 PM" src="https://user-images.githubusercontent.com/59756917/194955114-9b79c12c-a660-4a54-a2d4-917f66ffdbc1.png">
 
 ### Convergence Time Graphs for Gossip Algorithm
 <img width="1512" alt="Screen Shot 2022-10-10 at 1 35 48 PM" src="https://user-images.githubusercontent.com/59756917/194953506-fe216834-44f1-4b19-abc2-1edf3322cbad.png">
@@ -50,12 +54,16 @@
 
 ## Observations(Push-Sum)
 ### Running Push-Sum for Full Topology
+<img width="386" alt="Screen Shot 2022-10-10 at 5 30 01 PM" src="https://user-images.githubusercontent.com/59756917/194955269-73e5c238-ccaa-4d87-92a6-a11d4ede3fcb.png">
 
 ### Running Push-Sum for 2D
+<img width="395" alt="Screen Shot 2022-10-10 at 5 30 39 PM" src="https://user-images.githubusercontent.com/59756917/194955315-f3d83c47-d7c6-4b6e-9c6d-fdca8ce03ec4.png">
 
 ### Running Push-Sum for Line
+<img width="400" alt="Screen Shot 2022-10-10 at 5 31 05 PM" src="https://user-images.githubusercontent.com/59756917/194955364-e44e371e-6f88-4d50-82e2-4fc97786288e.png">
 
 ### Running Push-Sum for 3D
+<img width="386" alt="Screen Shot 2022-10-10 at 5 31 35 PM" src="https://user-images.githubusercontent.com/59756917/194955423-6f5e19ec-2ece-4346-b8c7-94def2f80648.png">
 
 ### Convergence Time Graphs for Push-Sum Algorithm
 <img width="1512" alt="Screen Shot 2022-10-10 at 1 35 57 PM" src="https://user-images.githubusercontent.com/59756917/194953533-6f787f82-7c88-42b2-a808-6989ecbca12f.png">
